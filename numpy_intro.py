@@ -51,3 +51,38 @@ print(arr.dtype) # int32 (32 bitet foglal el egy szám)
 arr = arr.astype("float32")
 print(arr.dtype)
 print(arr)
+
+arr = np.array([1,2,3,4], dtype="i")
+print(arr)
+print(arr.dtype)
+
+arr = np.array([i for i in range(4096)]).reshape(4,4,4,4,16)
+
+for i in range(4):
+    for j in range(4):
+        for k in range(4):
+            for l in range(4):
+                for m in range(16):
+                    pass
+                    #print(arr[i,j,k,l,m]) EZ SZÍVÁS
+                    
+
+    
+x = np.where(arr % 512 == 0)
+
+print(x)
+
+filtered = []
+for item in np.nditer(arr):
+    if item % 512 == 0:
+        filtered.append(item)
+        
+filtered = np.array(filtered)
+print(filtered)
+
+filtered = arr[arr % 1024 == 0]
+print(filtered)
+
+filter_arr = arr % 13 == 0
+filtered = arr[filter_arr]
+print(filtered)
