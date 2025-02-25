@@ -83,6 +83,19 @@ print(filtered)
 filtered = arr[arr % 1024 == 0]
 print(filtered)
 
-filter_arr = arr % 13 == 0
+filter_arr = arr % 138 == 0
 filtered = arr[filter_arr]
 print(filtered)
+
+rand = np.random.randint(1, 10, size = (5,5,10))
+print(rand)
+
+rand = np.random.rand(5, 5)
+print(rand)
+rand = np.round(rand * 100, 2)
+print(rand)
+
+
+import matplotlib.pyplot as plt # pip install matplotlib
+rand_value = np.random.choice(["alma", "banán", "citrom", "dinnye"], p=[0.5, 0.2, 0.1, 0.2], size = 1000)
+print(rand_value)
