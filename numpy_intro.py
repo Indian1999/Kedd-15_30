@@ -78,24 +78,33 @@ for item in np.nditer(arr):
         filtered.append(item)
         
 filtered = np.array(filtered)
-print(filtered)
+#print(filtered)
 
 filtered = arr[arr % 1024 == 0]
-print(filtered)
+#print(filtered)
 
 filter_arr = arr % 138 == 0
 filtered = arr[filter_arr]
-print(filtered)
+#print(filtered)
 
 rand = np.random.randint(1, 10, size = (5,5,10))
-print(rand)
+#print(rand)
 
 rand = np.random.rand(5, 5)
-print(rand)
+#print(rand)
 rand = np.round(rand * 100, 2)
-print(rand)
+#print(rand)
 
 
 import matplotlib.pyplot as plt # pip install matplotlib
-rand_value = np.random.choice(["alma", "banán", "citrom", "dinnye"], p=[0.5, 0.2, 0.1, 0.2], size = 1000)
-print(rand_value)
+rand_value = np.random.choice(["alma", "banán", "citrom", "dinnye"], p=[0.5, 0.2, 0.1, 0.2], size = 100)
+#print(rand_value)
+
+uniques, counts = np.unique(rand_value, return_counts=True)
+
+plt.bar(uniques, counts, color = ["red", "brown", "yellow", "green"])
+plt.xlabel("Gyümölcs")
+plt.ylabel("Gyakoriság")
+plt.title("Gyümölcsök gyakorisága")
+#plt.show()
+plt.savefig("fruit_bar.png")
