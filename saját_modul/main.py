@@ -14,5 +14,11 @@ print(v)
 a = Vector3(2,-5,0)
 print(a)
 print(Vector3.distance(a,v))
+print(a.length())
+b = Vector3()
+print(b)
+
+forward = Vector3.forward
+print(forward)
 
 
