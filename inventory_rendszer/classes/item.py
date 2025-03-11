@@ -1,4 +1,4 @@
-from rarity import Rarity
+from .rarity import Rarity
 class Item:
     """
         Defines the Item abstarct class.
