@@ -1,4 +1,7 @@
 from .rarity import Rarity
+import os
+from PIL import Image, ImageTk
+
 class Item:
     """
         Defines the Item abstarct class.
@@ -15,3 +18,7 @@ class Item:
         self.vendorBuyPrice = 10*vendorSellPrice # Ha egy vendor árulja, mennyiért tudom megvenni?
         self.rarity = rarity
         self.name = name
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) 
+        # inventory_rendszer mappa útvonala
+        self.icon_path = os.path.join(base_dir, "images", "placeholder.png")
+        self.icon_image = ImageTk.PhotoImage(Image.open(self.icon_path).resize(50,50))
