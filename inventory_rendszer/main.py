@@ -6,8 +6,8 @@ class App:
         self.root = root
         self.root.title("My Little Inventory")
         
-        self.player_inventory = Inventory()
-        self.vendor_inventory = Inventory()
+        self.player_inventory = Inventory(items=[Item("sajt"), Item("kolbász")], money = 1000)
+        self.vendor_inventory = Inventory(items=[Item("asd"),Item("asd"),Item("asd"),Item("asd")])
         self.setup_ui()
         
     def setup_ui(self):

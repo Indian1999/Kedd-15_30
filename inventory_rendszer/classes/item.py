@@ -20,5 +20,5 @@ class Item:
         self.name = name
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) 
         # inventory_rendszer mappa útvonala
-        self.icon_path = os.path.join(base_dir, "images", "placeholder.png")
-        self.icon_image = ImageTk.PhotoImage(Image.open(self.icon_path).resize(50,50))
+        self.icon_path = os.path.join(base_dir, "images", "placeholder_icon.png")
+        self.icon_image = ImageTk.PhotoImage(Image.open(self.icon_path).resize((50,50)))
