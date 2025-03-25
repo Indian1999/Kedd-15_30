@@ -1,15 +1,36 @@
 from classes import *
 import tkinter as tk # pip install tkinter
 from tkinter import messagebox
+import os
 
 class App:
     def __init__(self, root):
         self.root = root
         self.root.title("My Little Inventory")
         
-        self.player_inventory = Inventory(items=[Item("sajt"), Item("kolbász")], money = 100)
-        self.vendor_inventory = Inventory(items=[Item("asd"),Item("asd"),Item("asd"),Item("asd")])
+        self.player_inventory = Inventory(money = 3000)
+        self.vendor_inventory = Inventory(items=[])
+        self.load_inventory()
         self.setup_ui()
+        
+    def load_inventory(self):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        with open(os.path.join(base_dir, "data", "player_inventory.csv"), "r", encoding="utf-8") as f:
+            f.readline()
+            line = f.readline()
+            while line != "":
+                line = line.strip().split(";")
+                item = Item(line[0], Rarity.COMMON, int(line[2]), int(line[3]), int(line[4]))
+                self.player_inventory.addItem(item)
+                line = f.readline()
+        with open(os.path.join(base_dir, "data", "vendor_inventory.csv"), "r", encoding="utf-8") as f:
+            f.readline()
+            line = f.readline()
+            while line != "":
+                line = line.strip().split(";")
+                item = Item(line[0], Rarity.COMMON, int(line[2]), int(line[3]), int(line[4]))
+                self.vendor_inventory.addItem(item)
+                line = f.readline()
         
     def setup_ui(self):
         self.money_label = tk.Label(self.root, text=f"Gold: {self.player_inventory.money}", font = ("Arial", 16))
@@ -87,9 +108,19 @@ class App:
             item.quantity -= 1
             
         self.player_inventory.addItem(Item(item.name, item.rarity, item.maxStackSize, item.vendorSellPrice, 1))
+        
+        self.refresh_inventories()
     
     def sell_item(self, item):
-        pass
+        if item not in self.player_inventory:
+            return
+        self.player_inventory.money += item.vendorSellPrice
+        item.quantity -= 1
+        if item.quantity == 0:
+            self.player_inventory.removeItem(item)
+        self.vendor_inventory.addItem(Item(item.name, item.rarity, item.maxStackSize, item.vendorSellPrice, 1))
+        self.refresh_inventories()
+        
     
     
 if __name__ == "__main__": # Ez a program belépési pontja
