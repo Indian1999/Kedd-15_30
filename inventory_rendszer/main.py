@@ -1,12 +1,13 @@
 from classes import *
 import tkinter as tk # pip install tkinter
+from tkinter import messagebox
 
 class App:
     def __init__(self, root):
         self.root = root
         self.root.title("My Little Inventory")
         
-        self.player_inventory = Inventory(items=[Item("sajt"), Item("kolbász")], money = 1000)
+        self.player_inventory = Inventory(items=[Item("sajt"), Item("kolbász")], money = 100)
         self.vendor_inventory = Inventory(items=[Item("asd"),Item("asd"),Item("asd"),Item("asd")])
         self.setup_ui()
         
@@ -33,7 +34,7 @@ class App:
             
         row, col = 0, 0
         for item in self.player_inventory.items:
-            self.create_item_widget(self.player_frame, item, None, row, col)
+            self.create_item_widget(self.player_frame, item, self.sell_item, row, col)
             col += 1
             if col > 1:
                 col = 0
@@ -41,7 +42,7 @@ class App:
                 
         row, col = 0, 0
         for item in self.vendor_inventory.items:
-            self.create_item_widget(self.vendor_frame, item, None, row, col)
+            self.create_item_widget(self.vendor_frame, item, self.buy_item, row, col)
             col += 1
             if col > 1:
                 col = 0
@@ -55,6 +56,41 @@ class App:
         
         icon_label = tk.Label(item_frame, image=item.icon_image)
         icon_label.pack()
+        
+        name_label = tk.Label(item_frame, text=f"{item.name}")
+        name_label.pack()
+        
+        quantity_label = tk.Label(item_frame, text=f"Amount: {item.quantity}")
+        quantity_label.pack()
+        
+        if action_func == self.buy_item:
+            price_label = tk.Label(item_frame, text=f"{item.vendorBuyPrice} 🪙")
+            price_label.pack()
+        else:
+            price_label = tk.Label(item_frame, text=f"{item.vendorSellPrice} 🪙")
+            price_label.pack()
+        
+        action_btn = tk.Button(item_frame, text = "Buy" if action_func == self.buy_item else "Sell",
+                               command = lambda: action_func(item))
+        action_btn.pack(pady=5)
+        
+    def buy_item(self, item):
+        if item not in self.vendor_inventory:
+            return
+        if self.player_inventory.money < item.vendorBuyPrice:
+            messagebox.showwarning("Not Enough Gold", "You do not have enough gold to buy this item.")
+            return
+        self.player_inventory.money -= item.vendorBuyPrice
+        if item.quantity == 1:
+            self.vendor_inventory.removeItem(item)
+        else:
+            item.quantity -= 1
+            
+        self.player_inventory.addItem(Item(item.name, item.rarity, item.maxStackSize, item.vendorSellPrice, 1))
+    
+    def sell_item(self, item):
+        pass
+    
     
 if __name__ == "__main__": # Ez a program belépési pontja
     root = tk.Tk()

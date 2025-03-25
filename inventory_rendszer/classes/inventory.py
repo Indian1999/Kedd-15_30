@@ -7,7 +7,9 @@ class Inventory:
         self.money = money
         
     def addItem(self, item: Item):
-        if len(self.items) < self.size:
+        if item in self.items:
+            self.items[self.items.find(item)].quantity += item.quantity
+        elif len(self.items) < self.size:
             self.items.append(item)
         else:
             print("Inventory is full!")
@@ -18,5 +20,8 @@ class Inventory:
                 self.items.remove(item)
                 return
         print("This item is not in the inventory!")
+        
+    def __contains__(self, item): # in operátor műkédésének definiálása az osztályhoz
+        return item in self.items
         
         
