@@ -5,24 +5,32 @@ import os
 
 """
 TODO:
-Az inventoryk gridje legyen szélesebb, ne csak 2 oszlop
 Amikor kilépünk, akkor mentsük el az inventorykat fileba
-Minden itemnek legyen saját iconja
-    A file neve, legyen az item neve + png (különleges karakterek nélkül)
 Beolvasásnál vegyük figyelembe a rarity-t
-    
+Ha már van nálunk olyan item amit veszünk, akkor a stackhez adjuk hozzá, nem új itemként
 """
 
 class App:
     def __init__(self, root):
         self.root = root
         self.root.title("My Little Inventory")
-        
+        self.frame_cols = 5
         self.player_inventory = Inventory(money = 3000)
         self.vendor_inventory = Inventory(items=[])
         self.load_inventory()
         self.setup_ui()
         
+    def save_inventories(self):
+        with open("player_inventory.csv", "w", encoding="utf-8") as f:
+            f.write("item_name;rarity;maxStackSize;vendorSellPrice;quantity\n")
+            for item in self.player_inventory.items:
+                f.write(item + "\n")
+                
+        with open("vendor_inventory.csv", "w", encoding="utf-8") as f:
+            f.write("item_name;rarity;maxStackSize;vendorSellPrice;quantity\n")
+            for item in self.vendor_inventory.items:
+                f.write(item + "\n")
+            
     def load_inventory(self):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         with open(os.path.join(base_dir, "data", "player_inventory.csv"), "r", encoding="utf-8") as f:
@@ -44,16 +52,16 @@ class App:
         
     def setup_ui(self):
         self.money_label = tk.Label(self.root, text=f"Gold: {self.player_inventory.money}", font = ("Arial", 16))
-        self.money_label.grid(row = 0, column = 0, columnspan=4, pady=10)
+        self.money_label.grid(row = 0, column = 0, columnspan=self.frame_cols * 2, pady=10)
         
-        tk.Label(self.root,text="Your bag", font=("Arial",12)).grid(row=1, column=0, columnspan=2)
-        tk.Label(self.root,text="Vendor", font=("Arial",12)).grid(row=1, column=2, columnspan=2)
+        tk.Label(self.root,text="Your bag", font=("Arial",12)).grid(row=1, column=0, columnspan=self.frame_cols)
+        tk.Label(self.root,text="Vendor", font=("Arial",12)).grid(row=1, column=self.frame_cols, columnspan=self.frame_cols)
         
         self.player_frame = tk.Frame(self.root)
         self.vendor_frame = tk.Frame(self.root)
         
-        self.player_frame.grid(row=2, column=0, columnspan=2, padx=10)
-        self.vendor_frame.grid(row=2, column=2, columnspan=2, padx=10)
+        self.player_frame.grid(row=2, column=0, columnspan=self.frame_cols, padx=10)
+        self.vendor_frame.grid(row=2, column=self.frame_cols, columnspan=self.frame_cols, padx=10)
         
         self.refresh_inventories()
         
@@ -67,7 +75,7 @@ class App:
         for item in self.player_inventory.items:
             self.create_item_widget(self.player_frame, item, self.sell_item, row, col)
             col += 1
-            if col > 1:
+            if col > self.frame_cols - 1:
                 col = 0
                 row += 1
                 
@@ -75,7 +83,7 @@ class App:
         for item in self.vendor_inventory.items:
             self.create_item_widget(self.vendor_frame, item, self.buy_item, row, col)
             col += 1
-            if col > 1:
+            if col > self.frame_cols - 1:
                 col = 0
                 row += 1
                 
