@@ -3,6 +3,16 @@ import tkinter as tk # pip install tkinter
 from tkinter import messagebox
 import os
 
+"""
+TODO:
+Az inventoryk gridje legyen szélesebb, ne csak 2 oszlop
+Amikor kilépünk, akkor mentsük el az inventorykat fileba
+Minden itemnek legyen saját iconja
+    A file neve, legyen az item neve + png (különleges karakterek nélkül)
+Beolvasásnál vegyük figyelembe a rarity-t
+    
+"""
+
 class App:
     def __init__(self, root):
         self.root = root
