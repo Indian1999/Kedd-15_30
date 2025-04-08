@@ -1,13 +1,18 @@
+45000
 item_name;rarity;maxStackSize;vendorSellPrice;quantity
-Iron Dagger;common;20;30;10
-Health Potion;common;20;50;5
-Mana Potion;common;20;50;7
-Steel Sword;uncommon;20;100;4
-Leather Boots;common;20;40;8
-Magic Tome;rare;20;200;2
-Enchanted Ring;epic;20;500;1
-Dragon Scale;legendary;20;1000;1
-Silver Arrow;uncommon;20;60;6
-Battle Axe;rare;20;250;3
-Holy Symbol;epic;20;650;1
-Demon Fang;legendary;20;1300;1
+Iron Dagger;COMMON;20;30;10
+Health Potion;COMMON;20;50;5
+Mana Potion;COMMON;20;50;5
+Steel Sword;COMMON;20;100;4
+Leather Boots;COMMON;20;40;8
+Magic Tome;COMMON;20;200;2
+Enchanted Ring;COMMON;20;500;1
+Dragon Scale;COMMON;20;1000;1
+Silver Arrow;COMMON;20;60;6
+Battle Axe;COMMON;20;250;3
+Holy Symbol;COMMON;20;650;1
+Demon Fang;COMMON;20;1300;1
+Titanium Plate;COMMON;20;240;1
+Titanium Plate;COMMON;20;240;1
+Sorcerer's Staff;COMMON;20;1400;1
+Eldritch Amulet;COMMON;20;1500;1

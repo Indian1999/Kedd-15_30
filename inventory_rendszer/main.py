@@ -5,7 +5,6 @@ import os
 
 """
 TODO:
-Amikor kilépünk, akkor mentsük el az inventorykat fileba
 Beolvasásnál vegyük figyelembe a rarity-t
 Ha már van nálunk olyan item amit veszünk, akkor a stackhez adjuk hozzá, nem új itemként
 """
@@ -14,26 +13,36 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("My Little Inventory")
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.frame_cols = 5
-        self.player_inventory = Inventory(money = 3000)
+        self.player_inventory = Inventory(items=[])
         self.vendor_inventory = Inventory(items=[])
         self.load_inventory()
         self.setup_ui()
         
+    def on_close(self):
+        self.save_inventories()
+        self.root.destroy()
+        
     def save_inventories(self):
-        with open("player_inventory.csv", "w", encoding="utf-8") as f:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        with open(os.path.join(base_dir, "data", "player_inventory.csv"), "w", encoding="utf-8") as f:
+            f.write(str(self.player_inventory.money) + "\n")
             f.write("item_name;rarity;maxStackSize;vendorSellPrice;quantity\n")
             for item in self.player_inventory.items:
-                f.write(item + "\n")
+                f.write(str(item) + "\n")
                 
-        with open("vendor_inventory.csv", "w", encoding="utf-8") as f:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        with open(os.path.join(base_dir, "data", "vendor_inventory.csv"), "w", encoding="utf-8") as f:
             f.write("item_name;rarity;maxStackSize;vendorSellPrice;quantity\n")
             for item in self.vendor_inventory.items:
-                f.write(item + "\n")
+                f.write(str(item) + "\n")
             
     def load_inventory(self):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         with open(os.path.join(base_dir, "data", "player_inventory.csv"), "r", encoding="utf-8") as f:
+            money = int(f.readline().strip())
+            self.player_inventory.money = money
             f.readline()
             line = f.readline()
             while line != "":
