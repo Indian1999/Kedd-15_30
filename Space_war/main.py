@@ -25,11 +25,11 @@ RED_SPACESHIP_IMAGE = pygame.image.load(os.path.join(ASSETS_PATH, "spaceship_red
 YELLOW_SPACESHIP_IMAGE = pygame.image.load(os.path.join(ASSETS_PATH, "spaceship_yellow.png"))
 RED_SPACEHIP = pygame.transform.rotate(
     pygame.transform.scale(RED_SPACESHIP_IMAGE, (SPACESHIP_WIDTH, SPACESHIP_HEIGHT)),
-    270
+    90
 )
 YELLOW_SPACESHIP = pygame.transform.rotate(
     pygame.transform.scale(YELLOW_SPACESHIP_IMAGE, (SPACESHIP_WIDTH, SPACESHIP_HEIGHT)),
-    90
+    270
 )
 
 def draw_window(red, yellow):
@@ -37,6 +37,27 @@ def draw_window(red, yellow):
     WINDOW.blit(RED_SPACEHIP, (red.x, red.y))
     WINDOW.blit(YELLOW_SPACESHIP, (yellow.x, yellow.y))
     pygame.display.update()
+
+def yellow_control(keys_pressed, yellow):
+    if keys_pressed[pygame.K_a] and yellow.x - VELOCITY >= 0:
+        yellow.x -= VELOCITY
+    if keys_pressed[pygame.K_d] and yellow.x + SPACESHIP_WIDTH + VELOCITY <= WIDTH / 2:
+        yellow.x += VELOCITY
+    if keys_pressed[pygame.K_w] and yellow.y - VELOCITY >= 0:
+        yellow.y -= VELOCITY
+    if keys_pressed[pygame.K_s] and yellow.y + SPACESHIP_HEIGHT + VELOCITY <= HEIGHT - 15:
+        yellow.y += VELOCITY
+        
+def red_control(keys_pressed, red):
+    if keys_pressed[pygame.K_LEFT] and red.x - VELOCITY >= WIDTH / 2:
+        red.x -= VELOCITY
+    if keys_pressed[pygame.K_RIGHT] and red.x + SPACESHIP_WIDTH + VELOCITY <= WIDTH + 20:
+        red.x += VELOCITY
+    if keys_pressed[pygame.K_UP] and red.y - VELOCITY >= 0:
+        red.y -= VELOCITY
+    if keys_pressed[pygame.K_DOWN] and red.y + SPACESHIP_HEIGHT + VELOCITY <= HEIGHT - 15:
+        red.y += VELOCITY
+        
 
 def main():
     red = pygame.Rect(WIDTH - 150, HEIGHT / 2, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
