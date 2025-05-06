@@ -65,6 +65,13 @@ METEOR_3_DIR = random.randint(0, 359)
 METEOR_3_X_VEL = math.cos(METEOR_3_DIR) * METEOR_VEL
 METEOR_3_Y_VEL = math.sin(METEOR_3_DIR) * METEOR_VEL
 
+SHIELD_HEIGHT, SHIELD_WIDTH = 100, 120
+SHIELD_IMAGE = pygame.image.load(os.path.join(ASSETS_PATH, "shield.png"))
+SHIELD_IMAGE = pygame.transform.scale(SHIELD_IMAGE, (SHIELD_WIDTH, SHIELD_HEIGHT))
+
+red_shield_active = False
+yellow_shield_active = False
+
 def draw_window(red, yellow, red_bullets, yellow_bullets, red_health, yellow_health, meteor_1, meteor_2, meteor_3):
     WINDOW.blit(SPACE, (0,0))
     
@@ -81,6 +88,15 @@ def draw_window(red, yellow, red_bullets, yellow_bullets, red_health, yellow_hea
     
     WINDOW.blit(RED_SPACEHIP, (red.x, red.y))
     WINDOW.blit(YELLOW_SPACESHIP, (yellow.x, yellow.y))
+    
+    if red_shield_active:
+        WINDOW.blit(SHIELD_IMAGE, 
+                    (red.x - (SHIELD_WIDTH - SPACESHIP_WIDTH) // 2 - 8,
+                     red.y - (SHIELD_HEIGHT - SPACESHIP_HEIGHT) // 2 +8) )
+    if yellow_shield_active:
+        WINDOW.blit(SHIELD_IMAGE, 
+                    (yellow.x - (SHIELD_WIDTH - SPACESHIP_WIDTH) // 2 - 8,
+                     yellow.y - (SHIELD_HEIGHT - SPACESHIP_HEIGHT) // 2 +8) )
     for bullet in red_bullets:
         pygame.draw.rect(WINDOW, RED, bullet)
     for bullet in yellow_bullets:
@@ -107,13 +123,15 @@ def red_control(keys_pressed, red):
     if keys_pressed[pygame.K_DOWN] and red.y + SPACESHIP_HEIGHT + VELOCITY <= HEIGHT - 15:
         red.y += VELOCITY
      
-def handle_bullets(yellow_bullets, red_bullets, yellow, red):
+def handle_bullets(yellow_bullets, red_bullets, yellow, red, meteor_1, meteor_2, meteor_3):
     for bullet in yellow_bullets:
         bullet.x += BULLET_VELOCITY
         if bullet.x > WIDTH:
             yellow_bullets.remove(bullet)
         if red.colliderect(bullet):
             pygame.event.post(pygame.event.Event(RED_HIT))
+            yellow_bullets.remove(bullet)
+        if meteor_1.colliderect(bullet) or meteor_2.colliderect(bullet) or meteor_3.colliderect(bullet):
             yellow_bullets.remove(bullet)
           
     for bullet in red_bullets:
@@ -123,6 +141,35 @@ def handle_bullets(yellow_bullets, red_bullets, yellow, red):
         if yellow.colliderect(bullet):
             pygame.event.post(pygame.event.Event(YELLOW_HIT))
             red_bullets.remove(bullet)
+        if meteor_1.colliderect(bullet) or meteor_2.colliderect(bullet) or meteor_3.colliderect(bullet):
+            red_bullets.remove(bullet)
+            
+    if yellow.colliderect(meteor_1):
+        meteor_1.x = WIDTH + 40
+        meteor_1.y = random.randint(0, HEIGHT)
+        pygame.event.post(pygame.event.Event(YELLOW_HIT))
+    if yellow.colliderect(meteor_2):
+        meteor_2.x = WIDTH + 40
+        meteor_2.y = random.randint(0, HEIGHT)
+        pygame.event.post(pygame.event.Event(YELLOW_HIT))
+    if yellow.colliderect(meteor_3):
+        meteor_3.x = WIDTH + 40
+        meteor_3.y = random.randint(0, HEIGHT)
+        pygame.event.post(pygame.event.Event(YELLOW_HIT))
+            
+    if red.colliderect(meteor_1):
+        meteor_1.x = -40
+        meteor_1.y = random.randint(0, HEIGHT)
+        pygame.event.post(pygame.event.Event(RED_HIT))
+    if red.colliderect(meteor_2):
+        meteor_2.x = -40
+        meteor_2.y = random.randint(0, HEIGHT)
+        pygame.event.post(pygame.event.Event(RED_HIT))
+    if red.colliderect(meteor_3):
+        meteor_3.x = -40
+        meteor_3.y = random.randint(0, HEIGHT)
+        pygame.event.post(pygame.event.Event(RED_HIT))
+        
 
 def draw_winner(text):
     font = pygame.font.SysFont("arial", 100)
@@ -205,7 +252,9 @@ def meteor_controller(meteor_1, meteor_2, meteor_3):
         METEOR_3_X_VEL = math.cos(METEOR_3_DIR) * METEOR_VEL
         METEOR_3_Y_VEL = math.sin(METEOR_3_DIR) * METEOR_VEL
 
+
 def main():
+    global yellow_shield_active
     red = pygame.Rect(WIDTH - 150, HEIGHT / 2, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
     yellow = pygame.Rect(SPACESHIP_WIDTH + 20, HEIGHT / 2, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
     
@@ -221,8 +270,12 @@ def main():
     
     clock = pygame.time.Clock()
     gameOn = True
+    tick_counter = 0
+    yellow_last_active = None
+    red_last_active = None
     while gameOn:
         clock.tick(FPS)    
+        tick_counter += 1
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 gameOn = False
@@ -237,6 +290,9 @@ def main():
                     bullet = pygame.Rect(red.x, red.y + red.height // 2, 10, 5)
                     red_bullets.append(bullet)
                     BULLET_FIRE_SOUND.play()
+                if event.key == pygame.K_LSHIFT:
+                    yellow_shield_active = True
+                    yellow_last_active = tick_counter
             if event.type == YELLOW_HIT:
                 yellow_health -= 1
                 HIT_SOUND.play()
@@ -251,10 +307,13 @@ def main():
             draw_winner("Red wins!")
             break
         
+        if yellow_last_active and tick_counter > yellow_last_active + 300:
+            yellow_shield_active = False
+        
         keys_pressed = pygame.key.get_pressed()
         yellow_control(keys_pressed, yellow)
         red_control(keys_pressed, red)
-        handle_bullets(yellow_bullets, red_bullets, yellow, red)
+        handle_bullets(yellow_bullets, red_bullets, yellow, red, meteor_1, meteor_2, meteor_3)
         meteor_controller(meteor_1, meteor_2, meteor_3)
         draw_window(red, yellow, red_bullets, yellow_bullets, red_health, yellow_health, meteor_1, meteor_2, meteor_3)
 
