@@ -28,6 +28,10 @@ def random_pos():
     y = random.randrange(0, WINDOW_HEIGHT, PIXEL_SIZE)
     return x, y
 
+def draw_snake(snake):
+    for pixel in snake:
+        pygame.draw.rect(WINDOW, BLACK, [pixel[0], pixel[1], PIXEL_SIZE, PIXEL_SIZE])
+
 def gameloop():
     game_over = False
     application_close = False
@@ -65,6 +69,29 @@ def gameloop():
                 elif event.key == pygame.K_DOWN:
                     x_change = 0
                     y_change = PIXEL_SIZE
+        
+        # Leellenőrizzük, hogy kimentük-e a játéktérről
+        if x_snake >= WINDOW_WIDTH or x_snake <= 0 or y_snake >= WINDOW_HEIGHT or y_snake <= 0:
+            game_over = True
+            
+        # A sebességel módosítjuk a snake pozícióját
+        x_snake += x_change
+        y_snake += y_change
+        
+        WINDOW.fill(BLUE) # Legyen kék a háttér
+        pygame.draw.rect(WINDOW, GREEN, [x_food, y_food, PIXEL_SIZE, PIXEL_SIZE]) # Kaja kirajzolása
+        
+        snake.append([x_snake, y_snake])
+        if len(snake) > length_of_snake:
+            del snake[0]
+            
+        # Saját farkába harapott-e a kígyó?
+        for pixel in snake[:-1]:
+            if pixel == snake[-1]:
+                game_over = True
+                
+        draw_snake(snake)
+        pygame.display.update()
         
     pygame.quit()
     quit()
