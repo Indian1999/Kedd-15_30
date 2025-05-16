@@ -50,8 +50,18 @@ def gameloop():
     while not application_close:
         clock.tick(SPEED)
         while game_over:
-            # Kiírjuk hogy új játék vagy bezárás
-            pass
+            WINDOW.fill(BLUE)
+            text = game_over_font.render("R: újraindítás | Q: Kilépés", True, RED)
+            WINDOW.blit(text, [WINDOW_WIDTH // 4, WINDOW_HEIGHT // 2])
+            
+            pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        game_over = False
+                        application_close = True
+                    if event.key == pygame.K_r:
+                        gameloop()
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -71,7 +81,7 @@ def gameloop():
                     y_change = PIXEL_SIZE
         
         # Leellenőrizzük, hogy kimentük-e a játéktérről
-        if x_snake >= WINDOW_WIDTH or x_snake <= 0 or y_snake >= WINDOW_HEIGHT or y_snake <= 0:
+        if x_snake >= WINDOW_WIDTH or x_snake < 0 or y_snake >= WINDOW_HEIGHT or y_snake < 0:
             game_over = True
             
         # A sebességel módosítjuk a snake pozícióját
@@ -91,6 +101,12 @@ def gameloop():
                 game_over = True
                 
         draw_snake(snake)
+        
+        # Ha a kígyó feje a kajánál van, egye meg
+        if x_snake == x_food and y_snake == y_food:
+            x_food, y_food = random_pos()
+            length_of_snake += 1
+        
         pygame.display.update()
         
     pygame.quit()
