@@ -17,8 +17,8 @@ pygame.display.set_caption("Snake")
 
 clock = pygame.time.Clock()
 
-PIXEL_SIZE = 10
-SPEED = 15
+PIXEL_SIZE = 40
+SPEED = 10
 
 game_over_font = pygame.font.SysFont("Arial", 25)
 score_font = pygame.font.SysFont("Arial", 35)
@@ -31,13 +31,17 @@ def random_pos():
 def draw_snake(snake):
     for pixel in snake:
         pygame.draw.rect(WINDOW, BLACK, [pixel[0], pixel[1], PIXEL_SIZE, PIXEL_SIZE])
+        
+def draw_points(points):
+    text = score_font.render("Score: " + str(points), True, YELLOW)
+    WINDOW.blit(text, [0,0]) 
 
 def gameloop():
     game_over = False
     application_close = False
     
-    x_snake = WINDOW_WIDTH // 2
-    y_snake = WINDOW_HEIGHT // 2
+    x_snake = round(WINDOW_WIDTH // 2 / PIXEL_SIZE) * PIXEL_SIZE
+    y_snake = round(WINDOW_HEIGHT // 2 / PIXEL_SIZE) * PIXEL_SIZE
     
     x_change = 0
     y_change = 0
@@ -53,6 +57,7 @@ def gameloop():
             WINDOW.fill(BLUE)
             text = game_over_font.render("R: újraindítás | Q: Kilépés", True, RED)
             WINDOW.blit(text, [WINDOW_WIDTH // 4, WINDOW_HEIGHT // 2])
+            draw_points(length_of_snake - 1)
             
             pygame.display.update()
             for event in pygame.event.get():
@@ -67,16 +72,16 @@ def gameloop():
             if event.type == pygame.QUIT:
                 application_close = True
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
+                if event.key == pygame.K_LEFT and x_change != PIXEL_SIZE:
                     x_change = -PIXEL_SIZE
                     y_change = 0
-                elif event.key == pygame.K_RIGHT:
+                elif event.key == pygame.K_RIGHT and x_change != -PIXEL_SIZE:
                     x_change = PIXEL_SIZE
                     y_change = 0
-                elif event.key == pygame.K_UP:
+                elif event.key == pygame.K_UP and y_change != PIXEL_SIZE:
                     x_change = 0
                     y_change = -PIXEL_SIZE
-                elif event.key == pygame.K_DOWN:
+                elif event.key == pygame.K_DOWN and y_change != -PIXEL_SIZE:
                     x_change = 0
                     y_change = PIXEL_SIZE
         
@@ -101,6 +106,7 @@ def gameloop():
                 game_over = True
                 
         draw_snake(snake)
+        draw_points(length_of_snake - 1)
         
         # Ha a kígyó feje a kajánál van, egye meg
         if x_snake == x_food and y_snake == y_food:
