@@ -6,6 +6,7 @@ class Board:
         self.cols = cols
         self.mines_count = mines_count
         self.grid = [[Cell(i, j) for j in range(self.cols)] for i in range(self.rows)]
+        self.mines_placed = False
         
     def place_mines(self, safe_x, safe_y):
         positions = [(i, j) for j in range(self.cols) for i in range(self.rows)]
@@ -17,6 +18,8 @@ class Board:
         for i in range(self.rows):
             for j in range(self.cols):
                 self.grid[i][j].adjacent_mines = self.count_adjacent_mines(i, j)
+
+        self.mines_placed = True
     
     def count_adjacent_mines(self, x, y):
         count = 0
