@@ -66,11 +66,78 @@ def matrix_pos_from_window_pos(x, y):
 def can_ghost_move_to(x, y, level):
     return level[x][y] != 1
 
+def fastest_neighbour(distances, x, y):
+    values = []
+    if distances[y+1][x] != -1:
+        values.append(distances[y+1][x])
+    if distances[y-1][x] != -1:
+        values.append(distances[y-1][x])
+    if distances[y][x+1] != -1:
+        values.append(distances[y][x+1])
+    if distances[y][x-1] != -1:
+        values.append(distances[y][x-1])
+    return min(values)
+    
+def possible_moves(distances, x, y):
+    moves = []
+    if distances[y+1][x] != -1 and distances[y + 1][x] > distances[y][x] + 1:
+        moves.append((y+1, x))
+    if distances[y-1][x] != -1 and distances[y - 1][x] > distances[y][x] + 1:
+        moves.append((y-1, x))
+    if distances[y][x+1] != -1 and distances[y][x+1] > distances[y][x] + 1:
+        moves.append((y, x+1))
+    if distances[y][x-1] != -1 and distances[y][x-1] > distances[y][x] + 1:
+        moves.append((y, x-1))
+    return moves
+        
+def find_distances(distances, x, y):
+    possible_new_value = fastest_neighbour(distances, x, y) + 1
+    if distances[y][x] > possible_new_value:
+        distances[y][x] = possible_new_value
+    moves = possible_moves(distances, x, y)
+    for move in moves:
+        find_distances(distances, move[1], move[0])
+    
+def choose_random_value(values):
+    if random.random() < 0.8:
+        return min(values)
+    else:
+        return random.choice(values)
+    
+def find_direction(ghost_x, ghost_y, pacman_x, pacman_y, level, power_up_active):
+    distances = [[math.inf for j in range(len(level[0]))] for i in range(len(level))]
+    for i in range(len(level)):
+        for j in range(len(level[i])):
+            if level[i][j] == 1:
+                distances[i][j] = -1 # -1-el jelöljük a falat
+    distances[pacman_y][pacman_x] = 0
+    find_distances(distances, pacman_x, pacman_y)
+    
+    values = [distances[ghost_y+1][ghost_x], 
+              distances[ghost_y-1][ghost_x],
+              distances[ghost_y][ghost_x+1],
+              distances[ghost_y][ghost_x-1]
+              ]
+    while -1 in values:
+        values.remove(-1)
+    best_value = choose_random_value(values)
+    if power_up_active:
+        best_value = random.choice(values)
+    if distances[ghost_y+1][ghost_x] == best_value:
+        return (1, 0)
+    if distances[ghost_y-1][ghost_x] == best_value:
+        return (-1, 0)
+    if distances[ghost_y][ghost_x+1] == best_value:
+        return (0, 1)
+    if distances[ghost_y][ghost_x-1] == best_value:
+        return (0, -1)
+    
 def move_ghosts(ghosts, score, ghost_worth, level, pacman_y, pacman_x, enemy_spawn_y, enemy_spawn_x, power_up_active):
     for ghost in ghosts:
-        directions = [(0, 1), (1, 0), (0,-1), (-1, 0)]
-        dy, dx = random.choice(directions)
+        #directions = [(0, 1), (1, 0), (0,-1), (-1, 0)]
+        #dy, dx = random.choice(directions)
         ghost_row, ghost_col = matrix_pos_from_window_pos(ghost.x, ghost.y)
+        dy, dx = find_direction(ghost_col, ghost_row, pacman_x, pacman_y, level, power_up_active)
         if can_ghost_move_to(ghost_row + dy, ghost_col + dx, level):
             ghost.x += dx * TILE_SIZE
             ghost.y += dy * TILE_SIZE
