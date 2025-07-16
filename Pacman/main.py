@@ -1,7 +1,10 @@
 import pygame
 import sys
 import os
+import getpass
+import time
 import math
+import requests
 import random
 pygame.font.init()
 
@@ -11,6 +14,8 @@ TILE_SIZE = 32
 LEVEL_ROWS, LEVEL_COLS = 15, 20
 WIDTH, HEIGHT = LEVEL_COLS * TILE_SIZE, LEVEL_ROWS * (TILE_SIZE + 4)
 FPS = 7
+
+URL = "https://pacman-a10cd-default-rtdb.europe-west1.firebasedatabase.app/highscores.json"
 
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
@@ -185,22 +190,61 @@ def draw_level(level, ghosts, power_up_active):
             window.blit(scared_ghost_image, ghost)
                      
 def draw_game_over(score, win):
+    def post_action():
+        data = {
+            "username": getpass.getuser(),
+            "score": score,
+            "timestamp": time.time()
+        }
+        try:
+            response = requests.post(URL, json=data)
+            if response.status_code == 200:
+                print("Highscore submitted successfully!")
+            else:
+                print("Error:", response.status_code)
+        except Exception as ex:
+            print("Error:", ex)
+            
+    post_action()
     window.fill(PATH_COLOR)
-    font = pygame.font.SysFont("Arial", 40)
+    font = pygame.font.SysFont("Arial", 30)
     score_text = font.render(f"Score: {score}", True, FOOD_COLOR)
     window.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2,
-                             HEIGHT // 2 - score_text.get_height() // 2
+                             score_text.get_height() // 2 + 40
                              ))
     if win:
         win_text = font.render("You Win!", True, FOOD_COLOR)
         window.blit(win_text, (WIDTH // 2 - score_text.get_width() // 2,
-                               HEIGHT // 2 - score_text.get_height() * 2
+                               score_text.get_height() // 2
                              ))
     else:
         win_text = font.render("You Lose!", True, FOOD_COLOR)
         window.blit(win_text, (WIDTH // 2 - score_text.get_width() // 2,
-                               HEIGHT // 2 - score_text.get_height() * 2
+                               score_text.get_height() // 2
                              ))
+    highscore_text = font.render("Highscores:", True, FOOD_COLOR)
+    window.blit(highscore_text, (WIDTH // 2 - score_text.get_width() // 2,
+                                 score_text.get_height() // 2 + 80
+                                 ))
+    try:
+        response = requests.get(URL)
+        if response.status_code == 200:
+            data = response.json()
+        else:
+            print("Error:", response.status_code)
+    except Exception as ex:
+        print("Error:", ex)
+    sorted_scores = sorted(data.items(), key = lambda x: x[1]["score"], reverse = True)
+    i = 0
+    while i < 10 and i < len(sorted_scores):
+        key, entry = sorted_scores[i]
+        name, score = entry["username"], entry["score"]
+        entry_text = font.render(f"{i+1}. {name}: {score}", True, (50, 250 - i * 15, 50))
+        window.blit(entry_text, (WIDTH // 2 - score_text.get_width() // 2,
+                                 score_text.get_height() // 2 + 120 + i * 40
+                                 ))
+        i += 1
+        
     pygame.display.update()
 
 def can_move_to(x, y, level):
