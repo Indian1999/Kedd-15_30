@@ -6,6 +6,8 @@ import time
 import math
 import requests
 import random
+import hashlib
+
 pygame.font.init()
 
 score_font = pygame.font.SysFont("Arial", 30)
@@ -43,6 +45,10 @@ scared_ghost_image = pygame.transform.scale(
     pygame.image.load(os.path.join(img_folder, "ghost_scared.png")),
     (TILE_SIZE, TILE_SIZE)
 )
+
+def code_timestamp(timestamp):
+    hash_object = hashlib.sha256(str(timestamp).encode())
+    return hash_object.hexdigest()
 
 def spawn_initial_ghosts(level, ghosts):
     for i in range(len(level)):
