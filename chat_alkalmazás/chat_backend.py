@@ -1,12 +1,12 @@
 import json
-from fastapi import FastAPI, Websocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 import time
 
 app = FastAPI()
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: list[Websocket] = []
+        self.active_connections: list[WebSocket] = []
 
     async def connect(self, websocket):
         await websocket.accept()
