@@ -19,7 +19,8 @@ class ConnectionManager:
     async def broadcast(self, message):
         for connection in self.active_connections:
             try:
-                await connection.send_text(json.dumps(message))
+                data = json.dumps(message)
+                await connection.send_text(data)
             except:
                 await self.disconnect(connection)
 
@@ -27,13 +28,13 @@ manager = ConnectionManager()
 message_history = []
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket):
+async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     await websocket.send_text(json.dumps(message_history))
 
     try:
         while True:
-            data = await websocket.recieve_text()
+            data = await websocket.receive_text()
             try:
                 payload = json.loads(data)
                 username = payload.get("username")
