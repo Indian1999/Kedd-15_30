@@ -69,6 +69,41 @@ class Room:
                 for side, player in self.players.items():
                     if player.ws == ws:
                         del self.players[side]
+                        
+rooms: dict = {} # kulcs: room_id, érték: Room objektum
+
+def get_room(room_id: str):
+    if room_id not in rooms.keys():
+        rooms[room_id] = Room(room_id)
+    return rooms[room_id]
         
+async def game_loop(room: Room):
+    delta_time = 1 / FPS
+    while True:
+        if len(room.players) == 0 and len(room.spectators) == 0:
+            room.gameOn = False
+            return
+        now = time.perf_counter()
+        dt = now - room.last_tick
+        room.last_tick = now
+        steps = max(1, int(round(dt / delta_time)))
+        step_dt = dt / steps if steps > 0 else delta_time
         
+        async with room.state_lock:
+            for _ in range(steps):
+                if "left" in room.players.keys():
+                    player = room.players["left"]
+                    up_velocity = -PADDLE_SPEED if player.input_up else 0
+                    down_velocity = PADDLE_SPEED if player.input_down else 0
+                    velocity = up_velocity + down_velocity
+                    if room.left_y + velocity >= 0 and room.left_y + velocity + PADDLE_HEIGHT <= HEIGHT:
+                        room.left_y += velocity
+                if "right" in room.players.keys():
+                    player = room.players["right"]
+                    up_velocity = -PADDLE_SPEED if player.input_up else 0
+                    down_velocity = PADDLE_SPEED if player.input_down else 0
+                    velocity = up_velocity + down_velocity
+                    if room.right_y + velocity >= 0 and room.right_y + velocity + PADDLE_HEIGHT <= HEIGHT:
+                        room.right_y += velocity
+    
     
