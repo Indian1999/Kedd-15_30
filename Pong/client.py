@@ -74,8 +74,8 @@ class GameClient:
         }
         try:
             await self.ws.send(json.dumps(payload))
-        except:
-            pass
+        except Exception as ex:
+            print(ex)
         
     async def mainloop(self):
         async with websockets.connect(self.url) as ws:
@@ -100,8 +100,8 @@ class GameClient:
                     
                     self.draw()
                     self.clock.tick(FPS)
-            except:
-                pass
+            except Exception as ex:
+                print(ex)
             finally:
                 recieve_task.cancel()
         pygame.quit()
@@ -117,7 +117,8 @@ class GameClient:
                           self.state["paddle_width"], self.state["paddle_height"]))
         
         pygame.draw.circle(self.window, WHITE, 
-                           (self.state["Ball_x"], self.state["ball_y"], self.state["ball_radius"]))
+                           (self.state["ball_x"], self.state["ball_y"]),
+                           self.state["ball_radius"])
         
         role_text = self.normal_font.render(self.side, True, WHITE)
         self.window.blit(role_text, (10,10))
@@ -128,9 +129,21 @@ class GameClient:
             
         pygame.display.update()
    
+def parse_args():
+    ap = argparse.ArgumentParser(description="Pong Websocket Client")
+    ap.add_argument("--host", default="127.0.0.1", help="Szerver host (alap: localhost)")
+    ap.add_argument("--port", type = int, default=8000, help="Szerver port (alap: 8000)")
+    ap.add_argument("--room", default="default", help="Room azonosító (alap: default)")
+    ap.add_argument("--name", default="Player", help="Játékosnév (alap: Player)")
+    return ap.parse_args()
+
 if __name__ == "__main__":
-    client = GameClient("")
+    args = parse_args()
+    url = f"ws://{args.host}:{args.port}/ws?room_id={args.room}&name={args.name}"
+    print(url)
+    client = GameClient(url)
     try:
         asyncio.run(client.mainloop())
-    except:
-        pass
+    except Exception as ex:
+        print(ex)
+        
