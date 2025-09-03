@@ -163,6 +163,59 @@ async def game_loop(room: Room):
 def root():
     return {"OK": True, "msg": "Pong server is running."}
 
+@app.websocket("/ws")
+async def ws_endpoint(ws: WebSocket, room_id: str = "default", name: str = "Player"):
+    await ws.accept()
+    room = get_room(room_id)
+    
+    if room.sides_free():
+        side_to_take = room.sides_free()[0]
+        player = Player(name, ws, side_to_take)
+        room.players[side_to_take] = player
+        await ws.send_text(json.dumps({
+                "type": "assignment",
+                "side": side_to_take,
+                "name": name
+            }))
+        await room.broadcast({
+            "type": "info",
+            "msg": f"{name} csatlakozott {side_to_take} oldalra."
+        })
+    else:
+        room.spectators.add(ws)
+        await ws.send_text(json.dumps({
+                "type": "assignment",
+                "side": "spectator",
+                "name": name
+            }))
+        
+    if room.task_loop == None or room.task_loop.done():
+        room.task_loop = asyncio.create_task(game_loop(room))
+        
+    try:
+        text = await ws.receive_text()
+        data = json.loads(text)
+        if data["type"] == "input":
+            p = room.players[side_to_take]
+            p.input_up = bool(data.get("up"))
+            p.input_down = bool(data.get("down"))
+    except WebSocketDisconnect:
+        if side_to_take in room.players.keys():
+            room.players[side_to_take].connected = False
+            del room.players[side_to_take]
+            await room.broadcast({
+                "type": "info",
+                "msg": f"{name} lecsatlakozott {side_to_take} oldalról."
+            })
+        else:
+            if ws in room.spectators:
+                room.spectators.remove(ws)
+    except:
+        if ws in room.spectators:
+            room.spectators.remove(ws)
+        else:
+            del room.players[side_to_take]
+
 if __name__ == "__main__":
     uvicorn.run("server:app", host="127.0.0.1", port="8000", reload=False)
     
