@@ -64,7 +64,45 @@ class GameClient:
         except:
             self.running = False
             
+    async def send_input(self):
+        if not self.ws:
+            return
+        payload = {
+            "type": "input",
+            "up": self.input_up,
+            "down": self.input_down
+        }
+        try:
+            await self.ws.send(json.dumps(payload))
+        except:
+            pass
+        
     async def mainloop(self):
         async with websockets.connect(self.url) as ws:
             self.ws = ws
+            recieve_task = asyncio.create_task(self.recieve_loop())
+            try:
+                while self.running:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            self.running = False
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_UP:
+                                self.input_up = True
+                            if event.key == pygame.K_DOWN:
+                                self.input_down = True
+                        if event.type == pygame.KEYUP:
+                            if event.key == pygame.K_UP:
+                                self.input_up = False
+                            if event.key == pygame.K_DOWN:
+                                self.input_down = False
+                    await self.send_input()
+                    
+                    self.draw()
+                    self.clock.tick(FPS)
+            except:
+                pass
+            finally:
+                recieve_task.cancel()
+        pygame.quit()
             
