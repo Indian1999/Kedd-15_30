@@ -105,4 +105,32 @@ class GameClient:
             finally:
                 recieve_task.cancel()
         pygame.quit()
+    
+    def draw(self):
+        self.window.fill(BLACK)
+        
+        pygame.draw.rect(self.window, WHITE, 
+                         (self.state["left_x"], self.state["left_y"], 
+                          self.state["paddle_width"], self.state["paddle_height"]))
+        pygame.draw.rect(self.window, WHITE, 
+                         (self.state["right_x"], self.state["right_y"], 
+                          self.state["paddle_width"], self.state["paddle_height"]))
+        
+        pygame.draw.circle(self.window, WHITE, 
+                           (self.state["Ball_x"], self.state["ball_y"], self.state["ball_radius"]))
+        
+        role_text = self.normal_font.render(self.side, True, WHITE)
+        self.window.blit(role_text, (10,10))
+        
+        if self.info_msg:
+            info_text = self.font.render(self.info_msg, True, WHITE)
+            self.window.blit(info_text, (10, HEIGHT - 30))
             
+        pygame.display.update()
+   
+if __name__ == "__main__":
+    client = GameClient("")
+    try:
+        asyncio.run(client.mainloop())
+    except:
+        pass
