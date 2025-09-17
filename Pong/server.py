@@ -12,7 +12,7 @@ WIDTH, HEIGHT = 800, 480
 PADDLE_WIDTH, PADDLE_HEIGHT = 12, 80
 BALL_RADIUS = 8
 PADDLE_SPEED = 340
-BALL_SPEED = 320
+BALL_SPEED = 260
 FPS = 60
 
 LEFT_X = 40
@@ -63,15 +63,17 @@ class Room:
         for ws in connections:
             try:
                 await ws.send_text(msg)
-            except:
+            except Exception as ex:
                 to_remove.append(ws)
         for ws in to_remove:
             if ws in self.spectators:
                 self.spectators.remove(ws)
             else:
+                side_to_delete = None
                 for side, player in self.players.items():
                     if player.ws == ws:
-                        del self.players[side]
+                        side_to_delete = player.side
+                del self.players[side_to_delete]
                         
 rooms: dict = {} # kulcs: room_id, érték: Room objektum
 
@@ -82,15 +84,18 @@ def get_room(room_id: str):
         
 async def game_loop(room: Room):
     delta_time = 1 / FPS
+    await asyncio.sleep(3)
+    room.last_tick = time.perf_counter()
     while True:
-        if len(room.players) == 0 and len(room.spectators) == 0:
-            room.gameOn = False
-            return
         now = time.perf_counter()
         dt = now - room.last_tick
         room.last_tick = now
         steps = max(1, int(round(dt / delta_time)))
         step_dt = dt / steps if steps > 0 else delta_time
+        
+        if len(room.players.items()) == 0 and len(room.spectators) == 0:
+            room.gameOn = False
+            return
         
         async with room.state_lock:
             for _ in range(steps):
@@ -99,29 +104,33 @@ async def game_loop(room: Room):
                     up_velocity = -PADDLE_SPEED if player.input_up else 0
                     down_velocity = PADDLE_SPEED if player.input_down else 0
                     velocity = up_velocity + down_velocity
+                    velocity *= step_dt
                     if room.left_y + velocity >= 0 and room.left_y + velocity + PADDLE_HEIGHT <= HEIGHT:
                         room.left_y += velocity
+                        
                 if "right" in room.players.keys():
                     player = room.players["right"]
                     up_velocity = -PADDLE_SPEED if player.input_up else 0
                     down_velocity = PADDLE_SPEED if player.input_down else 0
                     velocity = up_velocity + down_velocity
+                    velocity *= step_dt
                     if room.right_y + velocity >= 0 and room.right_y + velocity + PADDLE_HEIGHT <= HEIGHT:
                         room.right_y += velocity
                         
                 room.ball_x += room.ball_x_velocity * step_dt
                 room.ball_y += room.ball_y_velocity * step_dt
                 
-                if room.ball_y <= 0 or room.ball_y >= HEIGHT:
+                if room.ball_y <= 0 or room.ball_y >= HEIGHT - BALL_RADIUS // 2:
                     room.ball_y_velocity *= -1
                 
                 # Bal oldali visszapattanás
-                if room.ball_x + BALL_RADIUS <= LEFT_X + PADDLE_WIDTH:
-                    if room.left_y + 5 <= room.ball_y and room.left_y - PADDLE_HEIGHT - 5 >= room.ball_y:
+                if room.ball_x <= LEFT_X + PADDLE_WIDTH and room.ball_x >= LEFT_X:
+                    if room.left_y - 5 <= room.ball_y and room.left_y + PADDLE_HEIGHT + 5 >= room.ball_y:
                         room.ball_x_velocity *= -1
+                        print("vissza")
                 # Jobb oldali visszapattanás
-                if room.ball_x - BALL_RADIUS <= RIGHT_X:
-                    if room.right_y + 5 <= room.ball_y and room.right_y - PADDLE_HEIGHT - 5 >= room.ball_y:
+                if room.ball_x + BALL_RADIUS * 2 >= RIGHT_X and room.ball_x <= RIGHT_X + PADDLE_WIDTH:
+                    if room.right_y - 5 <= room.ball_y and room.right_y + PADDLE_HEIGHT + 5 >= room.ball_y:
                         room.ball_x_velocity *= -1
                         
                 someone_scored = False
@@ -130,7 +139,7 @@ async def game_loop(room: Room):
                     who_scored = "right"
                     room.score_right += 1
                     someone_scored = True
-                if room.ball_x > HEIGHT:
+                if room.ball_x > WIDTH:
                     who_scored = "left"
                     room.score_left += 1
                     someone_scored = True
@@ -156,7 +165,6 @@ async def game_loop(room: Room):
                 "score_left": room.score_left, "score_right": room.score_right,
                 "players": {side: p.name for side, p in room.players.items()}
             })
-            
         await asyncio.sleep(max(0.0, delta_time - (time.perf_counter() - now)))    
             
 @app.get("/")
@@ -172,6 +180,7 @@ async def ws_endpoint(ws: WebSocket, room_id: str = "default", name: str = "Play
         side_to_take = room.sides_free()[0]
         player = Player(name, ws, side_to_take)
         room.players[side_to_take] = player
+        print("Player added to ", side_to_take)
         await ws.send_text(json.dumps({
                 "type": "assignment",
                 "side": side_to_take,
@@ -183,22 +192,24 @@ async def ws_endpoint(ws: WebSocket, room_id: str = "default", name: str = "Play
         })
     else:
         room.spectators.add(ws)
+        print("spectator added")
         await ws.send_text(json.dumps({
                 "type": "assignment",
                 "side": "spectator",
                 "name": name
             }))
         
-    if room.task_loop == None or room.task_loop.done():
+    if room.task_loop == None or room.task_loop.done() and len(room.players) == 2:
         room.task_loop = asyncio.create_task(game_loop(room))
         
     try:
-        text = await ws.receive_text()
-        data = json.loads(text)
-        if data["type"] == "input":
-            p = room.players[side_to_take]
-            p.input_up = bool(data.get("up"))
-            p.input_down = bool(data.get("down"))
+        while True:
+            text = await ws.receive_text()
+            data = json.loads(text)
+            if data["type"] == "input":
+                p = room.players[side_to_take]
+                p.input_up = bool(data.get("up"))
+                p.input_down = bool(data.get("down"))
     except WebSocketDisconnect:
         if side_to_take in room.players.keys():
             room.players[side_to_take].connected = False

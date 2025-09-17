@@ -6,7 +6,7 @@ import sys
 import os
 import argparse
 
-WIDTH, HEIGHT = 800, 400
+WIDTH, HEIGHT = 800, 480
 FPS = 60
 
 WHITE = (255, 255, 255)
@@ -15,7 +15,7 @@ BLACK = (0,0,0)
 class GameClient:
     def __init__(self, url):
         self.url = url
-        self.side = "spectator"
+        self.side = "default"
         self.name = "Player"
         
         self.state = {
@@ -73,6 +73,7 @@ class GameClient:
             "down": self.input_down
         }
         try:
+            #print("sending payload:", payload)
             await self.ws.send(json.dumps(payload))
         except Exception as ex:
             print(ex)
@@ -99,7 +100,8 @@ class GameClient:
                     await self.send_input()
                     
                     self.draw()
-                    self.clock.tick(FPS)
+                    #self.clock.tick(FPS)
+                    await asyncio.sleep(1/FPS)
             except Exception as ex:
                 print(ex)
             finally:
@@ -123,8 +125,12 @@ class GameClient:
         role_text = self.normal_font.render(self.side, True, WHITE)
         self.window.blit(role_text, (10,10))
         
+        scores = (self.state["score_left"],self.state["score_right"])
+        score_text = self.large_font.render(f"{scores[0]} | {scores[1]}", True, WHITE)
+        self.window.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 10))
+        
         if self.info_msg:
-            info_text = self.font.render(self.info_msg, True, WHITE)
+            info_text = self.normal_font.render(self.info_msg, True, WHITE)
             self.window.blit(info_text, (10, HEIGHT - 30))
             
         pygame.display.update()
@@ -140,7 +146,6 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     url = f"ws://{args.host}:{args.port}/ws?room_id={args.room}&name={args.name}"
-    print(url)
     client = GameClient(url)
     try:
         asyncio.run(client.mainloop())
